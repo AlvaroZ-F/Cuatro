@@ -8108,6 +8108,8 @@ button.close {
 
 .navbar {
   margin-bottom: 0; }
+  .navbar .container {
+    background-color: transparent; }
   .navbar a {
     color: #000000 !important; }
   .navbar .fa {
@@ -8131,12 +8133,16 @@ button.close {
   text-align: center;
   background: #6bc79c;
   color: #000000; }
+  .section-a .container {
+    background-color: transparent; }
   .section-a .fa {
     font-size: 60px; }
 
 .section-b {
   background: #e6ebf1;
   padding: 30px 0; }
+  .section-b .container {
+    background-color: transparent; }
   .section-b img {
     width: 100%; }
 
@@ -8148,6 +8154,8 @@ button.close {
   text-align: center;
   background: #6bc79c;
   color: #000000; }
+  .section-c .container {
+    background-color: transparent; }
   .section-c .btn-primary {
     background: #46b983; }
 
@@ -8160,9 +8168,60 @@ button.close {
 .main {
   margin-top: 30px; }
 
+.container {
+  max-width: 768px;
+  margin: 0 auto;
+  background-color: #dddddd;
+  padding: 10px;
+  box-sizing: border-box; }
+  .container--fluid {
+    margin: 0;
+    max-width: 100%; }
+  .container__row {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%; }
+  [class*='container__col-'] {
+    width: 150px;
+    height: 30px;
+    background-color: #6bc79c;
+    outline: 1px solid #dddddd;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    font-weight: bold;
+    color: #000000; }
+  .container__col-1 {
+    flex-basis: 8.3333333333%; }
+  .container__col-2 {
+    flex-basis: 16.6666666667%; }
+  .container__col-3 {
+    flex-basis: 25%; }
+  .container__col-4 {
+    flex-basis: 33.3333333333%; }
+  .container__col-5 {
+    flex-basis: 41.6666666667%; }
+  .container__col-6 {
+    flex-basis: 50%; }
+  .container__col-7 {
+    flex-basis: 58.3333333333%; }
+  .container__col-8 {
+    flex-basis: 66.6666666667%; }
+  .container__col-9 {
+    flex-basis: 75%; }
+  .container__col-10 {
+    flex-basis: 83.3333333333%; }
+  .container__col-11 {
+    flex-basis: 91.6666666667%; }
+  .container__col-12 {
+    flex-basis: 100%; }
+
 footer {
   padding: 30px 0;
   background: #46b983;
   color: #000000; }
+  footer .container {
+    background-color: transparent; }
 
 /*# sourceMappingURL=app.css.map */

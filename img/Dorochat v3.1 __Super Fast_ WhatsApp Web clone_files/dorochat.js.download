@@ -1,0 +1,1721 @@
+console.log(
+  "%c%s",
+  "color: #1b2733; font-family: Trebuchet MS, sans-serif;font-size: 18px;",
+  "Welcome to whatsAppclone V3.1 😍😊😎 facebook messanger theme, ⚠ ");
+
+let host = "https://"+window.location.host;
+
+//Make Socket.io Connection
+var socket = io.connect(host, {'forceNew':true});
+let currentChatMessages = [];
+var loggedInUser = document.getElementById('userid');
+let profile = "";
+var conversation = $('.chat');
+var textMessage = document.getElementById('message');
+var textBox = document.querySelector('.input-message');
+var newChatMesage = [];//all new chat Id will be pushed in Here
+let blockedChat = [];
+let AudioNotification = [];//Muted chat
+let ActiveChatForBothUploadAndTex = {};//default undefined
+
+let userdata = null;
+
+//custom Selector handlers
+function DORO(selector){
+ let el = {};
+ el.selector = selector;
+ el.element = document.getElementById(el.selector);
+ el.val = function(){
+  return el.element.value;
+ }
+ el.sel = function(){
+ 	return el.element;
+ }
+ el.audio = function(file){
+  let audio = new Audio(file);
+  audio.play();
+ }
+ return el;
+}
+
+
+//Dorochat Messanger wrapper
+function DorochatMessanger(){
+this.newMsg__click = false;
+  //get chats
+let chats = async function(){
+//let url = 'https://dorochat.net/chat/data/data.json';
+let url = host+'/messages';
+var response = await fetch(url);
+var data = await response.json();
+for (let key in data) {
+currentChatMessages.push(data[key]);
+}
+}
+
+
+//get Logged in User Data
+
+let user = function(){
+$.ajax({
+ type: 'GET',
+ url: host+'/messages/user',         
+ success: function(data) {
+ data.forEach((user)=>{
+
+userdata = user;
+
+ });
+}
+});
+}
+
+//print chat
+  let printChat = function(data){
+  const chat = currentChatMessages;
+  let seen = "";
+  for (let key in chat) {
+  	if(chat[key].blocked == 1){
+     blockedChat.push(chat[key].coID);//We block chat that are block on ReLoad
+  	}
+    if(chat[key].profile==""){
+     profile = "assets/whatsAppclone/avatar/contact3.jpg";
+    }
+    else{
+     profile = "assets/whatsAppclone/profiles/"+chat[key].profile;
+    }
+
+     let onlineStatus = '';
+      
+onlineStatus = '<span id=user'+chat[key].id+' class="online-status offline"></span>';
+
+
+
+    if(chat[key].crUserFK == loggedInUser.value){//LOGGED IN USER
+      if(chat[key].user_two_read == 0){
+        seen = '<div class="contacts__avatar contacts__avatar--mini Msgseen"></div>';
+
+      }
+      else{
+
+        seen = '<div class="contacts__avatar contacts__avatar--mini Msgseen" style="background-image:url('+profile+')"></div>';
+
+      }
+
+      //check if message is an image.
+      if(chat[key].attachment == 1){
+         $(".contact-list").append(`<div class="contacts__slot" id="`+chat[key].coID+`">
+        <div class="contacts__avatar" style="background-image: url(`+profile+`);">`+onlineStatus+`</div>
+        <div class="contacts__name">
+          <p class="contact__uname">`+emojione.shortnameToImage(chat[key].fullname.replace(/\b\w/g, l => l.toUpperCase()))+`</p>
+          <p class="contacts__message"><img src="assets/whatsAppclone/img/photo-camera.svg" class="msgImg"> Image</p>
+        </div>
+        <div class="contacts__time">
+          <p class="Time">`+chat[key].crTime+`</p>
+          `+seen+`
+        </div>
+      </div>`);
+      }
+      else{
+         $(".contact-list").append(`<div class="contacts__slot" id="`+chat[key].coID+`">
+        <div class="contacts__avatar" style="background-image: url(`+profile+`);">`+onlineStatus+`</div>
+        <div class="contacts__name">
+          <p class="contact__uname">`+emojione.shortnameToImage(chat[key].fullname.replace(/\b\w/g, l => l.toUpperCase()))+`</p>
+          <p class="contacts__message">`+emojione.shortnameToImage(chat[key].crReply)+`</p>
+        </div>
+        <div class="contacts__time">
+          <p class="Time">`+chat[key].crTime+`</p>
+          `+seen+`
+        </div>
+      </div>`);
+      }
+      
+    }
+    else{
+ if(chat[key].user_two_read == 0){
+  seen = '<div class="contacts__avatar contacts__avatar--mini Msgseen"></div>';
+  NewMessageHandler(chat[key].coID);
+        //handle Notifications
+        notificationHandler();
+      //check if message is an image.
+      if(chat[key].attachment == 1){
+         $(".contact-list").append(`<div class="contacts__slot" id="`+chat[key].coID+`">
+        <div class="contacts__avatar" style="background-image: url(`+profile+`);">`+onlineStatus+`</div>
+        <div class="contacts__name">
+          <p class="contact__uname">`+emojione.shortnameToImage(chat[key].fullname.replace(/\b\w/g, l => l.toUpperCase()))+`</p>
+          <p class="contacts__message"><img src="assets/whatsAppclone/img/photo-camera-black.svg" class="msgImg"> Image</p>
+        </div>
+        <div class="contacts__time">
+          <p class="Time">`+chat[key].crTime+`</p>
+          `+seen+`
+        </div>
+      </div>`);
+      }
+      else{
+         $(".contact-list").append(`<div class="contacts__slot" id="`+chat[key].coID+`">
+        <div class="contacts__avatar" style="background-image: url(`+profile+`);">`+onlineStatus+`</div>
+        <div class="contacts__name">
+          <p class="contact__uname">`+emojione.shortnameToImage(chat[key].fullname.replace(/\b\w/g, l => l.toUpperCase()))+`</p>
+          <p class="contacts__message">`+emojione.shortnameToImage(chat[key].crReply)+`</p>
+        </div>
+        <div class="contacts__time">
+          <p class="Time">`+chat[key].crTime+`</p>
+          `+seen+`
+        </div>
+      </div>`);
+      }
+
+    $("#"+chat[key].coID).find('.contacts__message').css({"color":"black","font-weight":"700"});
+    $("#"+chat[key].coID).find('.contact__uname').css({"color":"black","font-weight":"700"});
+    let  msgStatus = $("#"+chat[key].coID).find('.contacts__avatar--mini');
+    //change time color
+    $("#"+chat[key].coID).find('.contacts__time').css({"color":"#09d261"});
+    $("#"+chat[key].coID).addClass('newChat');
+
+}
+else{
+   seen = '<div class="contacts__avatar contacts__avatar--mini Msgseen" style="background-image:url('+profile+')"></div>';
+ 
+ //check if message is an image.
+      if(chat[key].attachment == 1){
+         $(".contact-list").append(`<div class="contacts__slot" id="`+chat[key].coID+`">
+        <div class="contacts__avatar" style="background-image: url(`+profile+`);">`+onlineStatus+`</div>
+        <div class="contacts__name">
+          <p class="contact__uname">`+emojione.shortnameToImage(chat[key].fullname.replace(/\b\w/g, l => l.toUpperCase()))+`</p>
+          <p class="contacts__message"><img src="assets/whatsAppclone/img/photo-camera.svg" class="msgImg"> Image</p>
+        </div>
+        <div class="contacts__time">
+          <p class="Time">`+chat[key].crTime+`</p>
+          `+seen+`
+        </div>
+      </div>`);
+      }
+      else{
+         $(".contact-list").append(`<div class="contacts__slot" id="`+chat[key].coID+`">
+        <div class="contacts__avatar" style="background-image: url(`+profile+`);">`+onlineStatus+`</div>
+        <div class="contacts__name">
+          <p class="contact__uname">`+emojione.shortnameToImage(chat[key].fullname.replace(/\b\w/g, l => l.toUpperCase()))+`</p>
+          <p class="contacts__message">`+emojione.shortnameToImage(chat[key].crReply)+`</p>
+        </div>
+        <div class="contacts__time">
+          <p class="Time">`+chat[key].crTime+`</p>
+          `+seen+`
+        </div>
+      </div>`);
+      }
+
+}    
+
+}
+
+  }
+}
+  //get CHat Messages
+  this.chatMessages = function(id){
+  	document.getElementById('chat_id').value = id;
+  	chatHeader(id);//Update the chat header
+  	//Update Seen
+     messsageSeen(id);
+  	$("#show-contact-information").show();
+  	$(".floaty").show();
+
+    ImageArray = []//empty this and prepare for new images
+ $('.user-photos__slot').html("");// Prepare for new Image
+$(".img__item").html("");//remove all images in Lightbox
+
+ return new Promise((resolve, reject)=>{
+let error = false;
+var dataStr = "id="+ id;
+ $.ajax({
+ type: 'POST',
+ data: dataStr,
+ url: '/messages/chat',
+ beforeSend : function(){
+ $('.chat').html('<center><div align="center"><svg class="spinner-container" viewBox="0 0 44 44"><circle class="path" cx="22" cy="22" r="20" fill="none" stroke-width="4"></circle></svg></div></center>');
+ },					
+ success: function(data) {
+ $('.chat').html('');
+
+  //Print chat Messages
+data.forEach((el)=>{
+if(el.profile==""){
+     profile = "assets/whatsAppclone/avatar/contact3.jpg";
+    }
+    else{
+     profile = "assets/whatsAppclone/profiles/"+el.profile;
+    }
+
+    //CHECK IF THE MESSAGE IS FROM THE OWNER
+    if(el.crUserFK == loggedInUser.value){
+
+      //console.log(JSON.stringify(el, undefined, 3));
+
+      if($('.chat').find('.message__list:last-child').hasClass('messages--sent')){// check if they are from the owner
+          
+          if(el.attachment == 1){//is it an image
+             $('.chat').append($('<div/>').addClass('image__list single'));
+
+             $('.chat').append(` <div class="image__list single">
+            <div class="message__item__image message__sent__img">
+            <span class="img-message-single message--user--img--single" style="background-image: url(`+el.crReply+`)" onclick="openModal(); currentSlide(`+el.img_id+`)">
+            </span>
+            </div></div>`);
+             LightBoxImg(el);//Send to this function for listing image on the right side
+
+          
+          }
+          else{//No is a message
+
+            $('.messages--sent:last-child').append(`<div class="message__item message__sent">
+        <span class="chat__message message--user">`+emojione.shortnameToImage(el.crReply)+`</span>
+        </div>`);
+
+         }
+
+     }
+     else{
+
+      if(el.attachment==1){
+
+        $('.chat').append(` <div class="image__list single">
+            <div class="message__item__image message__sent__img">
+            <span class="img-message-single message--user--img--single" style="background-image: url(`+el.crReply+`)" onclick="openModal(); currentSlide(`+el.img_id+`)">
+            </span>
+            </div></div>`);
+
+
+        LightBoxImg(el);//Send to this function for listing image on the right side
+      }
+      else{
+
+        $('.chat').append(` <div class="message__list messages--sent">
+          <div class="message__item message__sent">
+          <span class="chat__message message--user">`+emojione.shortnameToImage(el.crReply)+`</span>
+          </div></div>`);
+
+      }
+
+
+
+     }
+
+    }
+    else{
+
+      //Message from another User.
+      if($('.chat').find('.message__list:last-child').hasClass('messages--received')){
+        //check if there's a pre message Received
+        if(el.attachment == 1){
+
+           $('.chat').append($('<div/>').addClass('image__list_receive R_single'));
+          //Image file
+
+         $('.chat').append(` <div class="image__list_receive R_single">
+            <div class="message__item__image message__receive__img">
+            <span class="img-message-single message--user--img--single--receive" style="background-image: url(`+el.crReply+`)" onclick="openModal(); currentSlide(`+el.img_id+`)">
+            </span>
+            </div>
+            </div>`);
+        LightBoxImg(el);//Send to this function for listing image on the right side
+
+
+
+        }
+        else{
+
+          //Message
+          $('.messages--received').append(`
+      <img class="sender__image" src="`+profile+`">
+      <div class="message__item message__receiver">
+        <span class="chat__message message--receiver">`+emojione.shortnameToImage(el.crReply)+`</span>
+      </div>`);
+
+        }
+
+      }
+      else{
+
+        //CHECK IF THERE'S IMAGE
+        if(el.attachment == 1){
+          
+
+          $('.chat').append(` <div class="image__list_receive R_single">
+            <div class="message__item__image message__receive__img">
+            <span class="img-message-single message--user--img--single--receive" style="background-image: url(`+el.crReply+`)" onclick="openModal(); currentSlide(`+el.img_id+`)">
+            </span>
+            </div>
+            </div>`);
+
+           LightBoxImg(el);//Send to this function for listing image on the right side
+
+
+
+        }
+        else{
+
+
+              $('.chat').append(`<div class="message__list messages--received">
+              <img class="sender__image" src="`+profile+`">
+              <div class="message__item message__receiver">
+              <span class="chat__message message--receiver">`+emojione.shortnameToImage(el.crReply)+`</span>
+              </div></div>`);
+
+        }
+
+      }
+    }
+
+  });
+
+resolve();
+  //scroll to bottom
+$('.chat').stop().animate({
+      scrollTop: $('.chat')[0].scrollHeight
+    }, 200);
+
+}
+
+ });
+});
+}
+//add New Message to Message Array
+this.addMessage = function(chatid,uid,time,msg,Sentfrom,me){
+ this.coID = chatid;
+ this.crUserFK = uid;
+ this.time = time;
+ this.crReply = msg;
+ this.seen = false;
+ this.sender = me;
+ this.from = Sentfrom;
+ currentChatMessages.push(this);
+ activeChat(chatid);
+ updateDom(chatid,msg);
+ return currentChatMessages;
+}
+//SuccessCall
+this.successcall = function(){
+$('.spinner-container').remove();
+}
+//active chat
+let activeChat = function(id){
+document.querySelector(".contact-list").prepend(DORO(id).sel());
+$("#"+id).find('.contacts__message').css({"font-weight":"400","color":"#999","font-size": "14px", "font-family":'"DejaVu Sans", "Bitstream Vera Sans", "Segoe UI", "Lucida Grande", Verdana, Tahoma, Arial, sans-serif;'});
+$("#"+id).find('.contact__uname').css({"font-weight":"400","font-family":'"DejaVu Sans", "Bitstream Vera Sans", "Segoe UI", "Lucida Grande", Verdana, Tahoma, Arial, sans-serif;'});
+}
+//Chat header
+let chatHeader = function(id){
+  let img = document.getElementById(id).querySelector('.contacts__avatar').style.backgroundImage;
+  let fimg = img.replace("url(",'').replace(")",'');
+  document.getElementById("chat__image__placeHolder").src = fimg.replace(/"([^"]+(?="))"/g, '$1');
+  document.getElementById("userImg").src = fimg.replace(/"([^"]+(?="))"/g, '$1');
+  let Username = document.getElementById(id).querySelector('.contacts__name').getElementsByTagName('p')[0].innerHTML;
+  let msgTime = document.getElementById(id).querySelector('.contacts__time').getElementsByTagName('p')[0].innerHTML;
+  document.querySelector('.font-name').innerHTML = Username;
+  document.querySelector('.font-online').innerHTML = "Last seen "+msgTime;
+  if(document.querySelector('.Show__User__uname')!== null){
+    $('#Show_right_USerInfo_Img').css({"background-image":"url("+fimg.replace(/"([^"]+(?="))"/g, '$1')+")"})
+    document.querySelector('.Show__User__uname').innerHTML = Username;
+    document.getElementById('right__userName').value = Username;
+    document.getElementById('userInfo__userName').innerHTML = Username;
+  }
+  else{
+    document.getElementById('right__userName').value = Username;
+    document.getElementById('userInfo__userName').innerHTML = Username;
+  }
+  isBlocked(id);
+//Active chat
+$('.contact-list').find("#"+id).addClass('active');
+}
+
+//active chat
+let updateDom = function(id,msg){
+document.getElementById(id).querySelector('.contacts__message').innerHTML = msg;
+let MsgStatus = document.getElementById(id).querySelector('.contacts__avatar--mini');
+if(hasClass(MsgStatus, 'Msgseen')){
+ MsgStatus.classList.remove("Msgseen");
+ MsgStatus.classList.add("Msgunseen");
+}
+else{
+  MsgStatus.classList.add("Msgunseen");
+}
+this.newMsg__click = false;
+updateMsgStatus(id);
+}
+//Check if Element has a class
+let hasClass = function (el, cls) {
+    return (' ' + el.className + ' ').indexOf(' ' + cls + ' ') > -1;
+}
+//initiate Our App
+this.init = async function(){
+  await chats();
+  printChat();
+  user();
+  }
+//Update  Seen Message 
+let messsageSeen = function(id){
+  focused = true;
+  textBox.focus();
+   if($(".contacts__slot").hasClass('newChat')){
+   	if(!isBlocked(id)){
+  socket.emit("seen",{id:id,chatStat:"newChat",profile:userdata.profile});
+}
+  updateMsgStatus(id);
+//Update Notification
+updateUnreadnotification(id);
+
+}
+}
+//Update Message status
+let updateMsgStatus = function(id){
+if(this.newMsg__click === false){
+  $("#"+id).find('.contacts__avatar--mini').css({"background-image":"none"});
+}  
+  //mark read
+  $("#"+id).find('.contacts__time').css({"color":"#999"});
+   $("#"+id).find('.contacts__avatar--mini').removeClass('newChat');
+   $("#"+id).find('.contacts__message').css({"font-weight":"400","color":"#999","font-size": "14px", "font-family":'"DejaVu Sans", "Bitstream Vera Sans", "Segoe UI", "Lucida Grande", Verdana, Tahoma, Arial, sans-serif;'});
+   $("#"+id).find('.contact__uname').css({"font-weight":"400","font-family":'"DejaVu Sans", "Bitstream Vera Sans", "Segoe UI", "Lucida Grande", Verdana, Tahoma, Arial, sans-serif;'});
+  }
+}
+
+let Umessanger = new DorochatMessanger();
+Umessanger.init();
+//Check if User chat is clicked.
+$('body').on('click','.contacts__slot', function(){
+  $('.chat').html('<center><div align="center"><svg class="spinner-container" viewBox="0 0 44 44"><circle class="path" cx="22" cy="22" r="20" fill="none" stroke-width="1"></circle></svg></div></center>');
+  let id = $(this).attr('id');
+  Umessanger.chatMessages(id).then(Umessanger.successcall).catch(error=>console.log("Uncought Error " +error));
+});
+
+$(function(){
+  	//lets Get Emoji working
+  	/*$('.loadSmiley').html('<center><div align="center"><svg class="spinner-container" viewBox="0 0 44 44"><circle class="path" cx="22" cy="22" r="20" fill="none" stroke-width="4"></circle></svg></div></center>');*/
+  	var smileyEmoji = Array(':smile:',':laughing:',':relaxed:',':kissing_heart:',':relieved:',':wink:',':grinning:',':stuck_out_tongue:',
+ 	':frowning:',':expressionless:',':grimacing:',':sweat:',':pensive:',':fearful:',':cry:',':astonished:',':tired_face:',':triumph:',
+ 	':mask:',':imp:',':no_mouth:',':yellow_heart:',':heart:',':heartbeat:',':revolving_hearts:',':sparkles:',':dizzy:',':anger:',':grey_exclamation:',':dash:',':musical_note:',':poop:',':thumbsup:',':ok_hand:',':fist:',':blush:',':point_up:',':point_right:',':point_up_2:',':metal:',':smirk:',':two_men_holding_hands:',':dancers:',':information_desk_person:',':person_with_pouting_face:',':couplekiss:',':haircut:',':girl:',':baby:',':person_with_blond_hair:',':construction_worker:',':princess:',':heart_eyes_cat:',':scream_cat:',':pouting_cat:',':see_no_evil:',':guardsman:',':lips:',':ear:',':tongue:',':busts_in_silhouette:',':kissing_closed_eyes:',':satisfied:',':stuck_out_tongue_winking_eye:',':kissing:',':sleeping:',':anguished:',':confused:',':unamused:',':disappointed_relieved:',':disappointed:',':cold_sweat:',':sob:',':scream:',':angry:',':sleepy:',':sunglasses:',':smiling_imp:',':innocent:',':blue_heart:',':green_heart:',':heartpulse:',':cupid:',':star:',':boom:',':exclamation:',':grey_question:',':sweat_drops:',':fire:',':shit:',':-1:',':punch:',':v:',':raised_hand:',':point_down:',':raised_hands:',':clap:',':bow:',':couple:',':two_women_holding_hands:',':ok_woman:',':raising_hand:',':couple_with_heart:',':nail_care:',':woman:',':older_woman:',':man_with_gua_pi_mao:',':cop:',':smiley_cat:',':kissing_cat:',':crying_cat_face:',':japanese_ogre:',':hear_no_evil:',':skull:',':kiss:',':eyes:',':love_letter:',':speech_balloon:',':grin:',':smiley:',':heart_eyes:',':flushed:',':grin:',':stuck_out_tongue_closed_eyes:',':worried:',':kissing_smiling_eyes:',':open_mouth:',':speak_no_evil:',':feet:',':joy_cat:');
+  	smileyEmoji.forEach(function(smiley){
+  		$('.loadSmiley').append('<span class="smile_insert" data-tab="'+ smiley +'"> <a href="#">'+ emojione.shortnameToImage(smiley) +'</a> </span>');
+  	});
+  	var animalEmoji = Array(':see_no_evil:',':hear_no_evil:',':speak_no_evil:',':gorilla:',':dog:',':dog2:',':poodle:',':wolf:',':fox:',':cat:',':cat2:',':lion_face:',':tiger:',':leopard:',':horse:',':racehorse:',':deer:',':unicorn:',':unicorn:',':ox:',':water_buffalo:',':cow2:',':pig:',':ram:',':sheep:',':goat:',':dromedary_camel:',':camel:',':elephant:',':rhino:',':mouse:',':mouse2:',':hamster:',':rabbit:',':rabbit2:',':chipmunk:',':bat:',':bear:',':bear:',':panda_face:',':feet:',':turkey:',':chicken:',':rooster:',':hatching_chick:',':baby_chick:',':hatched_chick:',':bird:',':penguin:',':dove:',':eagle:',':duck:',':owl:',':frog:',':crocodile:',':turtle:',':lizard:',':snake:',':dragon_face:',':dragon:',':whale:',':whale2:',':dolphin:',':fish:',':tropical_fish:',':tropical_fish:',':shark:',':octopus:',':shell:',':crab:',':shrimp:',':squid:',':butterfly:',':snail:',':bug:',':ant:',':bee:',':beetle:',':spider:',':spider_web:',':scorpion:',':bouquet:',':cherry_blossom:',':rosette:',':rose:',':wilted_rose:',':hibiscus:',':sunflower:',':blossom:',':tulip:',':seedling:',':evergreen_tree:',':deciduous_tree:',':palm_tree:',':cactus:',':ear_of_rice:',':herb:',':shamrock:',':four_leaf_clover:',':maple_leaf:',':fallen_leaf:',':leaves:',':mushroom:',':chestnut:',':earth_africa:',':earth_americas:',':earth_asia:',':new_moon:',':waxing_crescent_moon:',':first_quarter_moon:',':waxing_gibbous_moon:',':full_moon:',':waning_gibbous_moon:',':last_quarter_moon:',':waning_crescent_moon:',':crescent_moon:',':new_moon_with_face:',':first_quarter_moon_with_face:',':last_quarter_moon_with_face:',':sunny:',':full_moon_with_face:',':sun_with_face:',':star:',':star2:',':cloud:',':bamboo:',':tanabata_tree:',':christmas_tree:',':snowman2:',':umbrella:');
+  	animalEmoji.forEach(function(smiley){
+  		$('.loadAnimal').append('<span class="smile_insert" data-tab="'+ smiley +'"> <a href="#">'+ emojione.shortnameToImage(smiley) +'</a> </span>');
+  	});
+  	var foodEmoji = Array(':grapes:',':melon:',':watermelon:',':tangerine:',':lemon:',':banana:',':pineapple:',':apple:',':green_apple:',':pear:',':peach:',':cherries:',':strawberry:',':kiwi:',':tomato:',':avocado:',':eggplant:',':potato:',':carrot:',':corn:',':hot_pepper:',':cucumber:',':peanuts:',':bread:',':bread:',':french_bread:',':pancakes:',':cheese:',':meat_on_bone:',':poultry_leg:',':bacon:',':hamburger:',':fries:',':pizza:',':hotdog:',':taco:',':burrito:',':stuffed_flatbread:',':egg:',':cooking:',':shallow_pan_of_food:',':stew:',':salad:',':popcorn:',':bento:',':rice_cracker:',':rice_ball:',':rice:',':curry:',':ramen:',':spaghetti:',':sweet_potato:',':oden:',':sushi:',':fried_shrimp:',':fish_cake:',':dango:',':icecream:',':shaved_ice:',':ice_cream:',':doughnut:',':cookie:',':birthday:',':cake:',':chocolate_bar:',':candy:',':lollipop:',':custard:',':honey_pot:',':baby_bottle:',':milk:',':coffee:',':tea:',':sake:',':champagne:',':wine_glass:',':cocktail:',':cocktail:',':beer:',':beers:',':champagne_glass:',':tumbler_glass:',':fork_knife_plate:',':fork_and_knife:',':spoon:');
+     foodEmoji.forEach(function(smiley){
+  		$('.loadFood').append('<span class="smile_insert" data-tab="'+ smiley +'"> <a href="#">'+ emojione.shortnameToImage(smiley) +'</a> </span>');
+  	});
+     var activityEmoji = Array(':space_invader:',':levitate:',':fencer:',':horse_racing:',':skier:',':snowboarder:',':golfer:',':surfer:',':rowboat:',':swimmer:',':basketball_player:',':lifter:',':bicyclist:',':mountain_bicyclist:',':cartwheel:',':wrestlers:',':water_polo:',':handball:',':juggling:',':circus_tent:',':performing_arts:',':art:',':slot_machine:',':bath:',':reminder_ribbon:',':tickets:',':ticket:',':military_medal:',':trophy:',':medal:',':first_place:',':second_place:',':third_place:',':soccer:',':baseball:',':basketball:',':volleyball:',':football:',':rugby_football:',':tennis:',':8ball:',':bowling:',':cricket:',':field_hockey:',':hockey:',':ping_pong:',':badminton:',':boxing_glove:',':martial_arts_uniform:',':goal:',':dart:',':golf:',':ice_skate:',':fishing_pole_and_fish:',':running_shirt_with_sash:',':ski:',':video_game:',':game_die:',':musical_score:',':microphone:',':headphones:',':saxophone:',':guitar:',':musical_keyboard:',':trumpet:',':violin:',':drum:',':clapper:',':bow_and_arrow:');
+       activityEmoji.forEach(function(smiley){
+  		$('.loadActivities').append('<span class="smile_insert" data-tab="'+ smiley +'"> <a href="#">'+ emojione.shortnameToImage(smiley) +'</a> </span>');
+  	});
+  	//add emoji String to Input box once clicked.
+     $(".smile_insert").click(function(){
+
+  		var smiley= $(this).attr('data-tab');
+
+  		var message= $(".input-message").textContent;
+
+  		$(".input-message").append(emojione.shortnameToImage(smiley));
+  		placeCaretAtEnd( document.querySelector(".input-message") );
+});// smiley Tab1 insert smile
+
+      //Tabs for emoji
+ $('ul.tabs li').click(function(){
+ 	var tab_id = $(this).attr('data-tab');
+
+ 	$('ul.tabs li').removeClass('current');
+ 	$('.tab-content').removeClass('current');
+
+ 	$(this).addClass('current');
+    $("#"+tab_id).addClass('current');// switch smiley Tabs
+
+});
+
+ $("#delete__chat").click(function(){
+   $(".doroBlock").show();
+   let username = $("#right__userName").val();
+   $(".doro_heading").text("Delete conversation");
+  $(".Doro__Messanger").show();
+  $(".action__btn").removeClass("btn_block");
+  $(".action__btn").addClass("btn_delete").text("Delete");
+  $(".doro_con").html(`This will delete permenently all chat messages between you and <a href="#" style=text-decoration:none;color:#009688>`+username+`</a> in dorochat Messanger.
+ `);
+ });
+//block user
+ $("#block__messages").on("click", function(){
+  $(".doroBlock").show();
+   let username = $("#right__userName").val();
+   $(".action__btn").removeClass("btn_delete");
+  $(".action__btn").addClass("btn_block").text("Block");
+  $(".Doro__Messanger").css({"transition":"all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"}).show();
+  $(".doro_con").html(`Stop getting messages from `+username+` in dorochat Messanger.
+ If you want you can also <a href="#" class="block__on_site">block `+username+` on dorochat</a>.
+    They will no longer be able to follow you or see what you share.`);
+ });
+
+  $("#unblock__messages").on("click", function(){
+    var i = blockedChat.find(K=> K=DORO("chat_id").val());
+    if(i != undefined){
+    	socket.emit('unblock',{
+      chatId : DORO("chat_id").val(),
+    });
+
+ //UnBlock Messages Now
+var dataStr = "id="+ DORO("chat_id").val() +"&by="+ loggedInUser.value
+ $.ajax({
+ type: 'POST',
+ data: dataStr,
+ url: '/messages/unblock',				
+ success: function(data) {
+ if(data.message!=="Fail"){
+let i = blockedChat.find(P=> P==DORO("chat_id").val());
+const filteredItems = blockedChat.filter(item => item !== DORO("chat_id").val());
+blockedChat = filteredItems.splice(i, 1);
+  $(".message").show();
+  $(".blockedChat").hide();
+  $(".wrap-icon").show();
+  $(".block__User_Message").show();
+  $(".unblock__User_Message").hide();
+  textBox.focus();
+ }
+ else{
+ $(".doroBlock").show();
+  let username = $("#right__userName").val();
+  $(".action__btn").hide();
+  $(".doro_heading").text("Contact information");
+  $(".Doro__Messanger").css({"transition":"all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"}).show();
+  $(".doro_con").html(username+` is not available now.`);
+ }
+ }});
+
+}
+    
+ });
+
+ //cancel btn
+ $(".btn_cancel").on("click", function(){
+ $(".Doro__Messanger").hide();
+ $(".doroBlock").hide();
+ });
+ //Report cancel btn
+ $(".btn_cancel_report").on("click", function(){
+  $(".Doro__Messanger_report").hide();
+ $(".doroReport").hide();
+ });
+ //block Button  click
+ $("body").on("click",".btn_block",function(){
+ blockUserMessages();
+ });
+
+ //Delete
+ $("body").on("click", ".btn_delete", function(){
+  currentChatMessages.forEach((item)=>{
+  if(item.id ==  DORO("chat_id").val()){
+  $(".doroBlock").hide();
+ $(".Doro__Messanger").hide();
+ $("#"+DORO("chat_id").val()).remove();
+ currentChatMessages.splice(item.id, 1);
+ $(".right").hide();
+ $(".right-user-profile").hide();
+ $(".contacts").css({"margin-left":"-3px"});
+  }
+
+  });
+ });
+
+ $("#mute__Sound").on("click", function(){
+  muteSound(true);
+  $(".enable__sound").show();
+  $('.mute__Sound').hide();
+ });
+
+ $("#enable__sound").on("click", function(){
+  muteSound(false);
+  $(".mute__Sound").show();
+  $('.enable__sound').hide();
+ });
+
+ $("#report_abuse").on("click", function(){
+ $(".doroReport").show();
+   let username = $("#right__userName").val();
+   $(".action__btn").removeClass("btn_delete");
+  $(".action__btn").addClass("btn_block").text("Block");
+  $(".Doro__Messanger_report").css({"transition":"all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"}).show();
+  $(".doro_con").html(`<h3>Why do you want to report this conversation?</h3>
+<label class="spam-container">`+username +` is sending you suspicious links or attachments
+  <input type="radio" checked="checked" name="radio">
+  <span class="spam-checkmark"></span>
+</label>
+<label class="spam-container">`+username +` is insulting,harassing or threatening me or my family
+  <input type="radio" name="radio">
+  <span class="spam-checkmark"></span>
+</label>
+<label class="spam-container">`+username +` is most likely to be a spammer
+  <input type="radio" name="radio">
+  <span class="spam-checkmark"></span>
+</label>`);
+ });
+
+ //Show image shared
+ $("#show").click(function(){
+  $("#hide").toggle();
+  $(".user-photos__slot").toggle();
+  $(this).hide();
+ });
+
+ //Hide image shared
+ $("#hide").click(function(){
+  $("#show").toggle();
+  $(".user-photos__slot").toggle();
+  $(this).hide();
+ }); 
+
+  });
+function showEmoji(){
+	$("#smiley_input").toggle();
+}
+
+//Mute Sound 
+function muteSound(option){
+let MutedChat = AudioNotification.find(s=> s==DORO("chat_id").val());
+if(option == true){
+  if(MutedChat== undefined){
+  AudioNotification.push(DORO("chat_id").val());
+}
+}
+else{
+var i = AudioNotification.indexOf(DORO("chat_id").val());
+    if(i != -1){
+      AudioNotification.splice(i, 1);
+    }
+}
+}
+
+//check if sound is Muted
+function isMuted(id){
+  let MuteChecker = AudioNotification.find(y=> y==id);
+if(MuteChecker == undefined){
+  if(id == DORO("chat_id").val() ? DORO("Inreply").sel().play() : DORO("Incoming").sel().play());
+}
+}
+//check if chat has been deleted by The user
+function isdeletedChat(id){
+if(DORO(id).sel() == null){
+  return true;
+}
+else{
+  return false;
+}
+   
+}
+//Block User Messages
+ function blockUserMessages(){
+  let blockedchatfinder = blockedChat.find(d=> d==DORO("chat_id").val());
+if(blockedchatfinder  == undefined){
+  blockedChat.push(DORO("chat_id").val());
+ //Block The user Now
+var dataStr = "id="+ DORO("chat_id").val() +"&by="+ loggedInUser.value;
+ $.ajax({
+ type: 'POST',
+ data: dataStr,
+ url: '/messages/block',
+ beforeSend : function(){
+$(".doro_con").html('<center><div align="center"><svg class="spinner-container" viewBox="0 0 44 44"><circle class="path" cx="22" cy="22" r="20" fill="none" stroke-width="2"></circle></svg></div></center>');
+ },					
+ success: function(data) {
+ $(".doro_con").html(data.message);
+  $(".Doro__Messanger").hide();
+  $(".doroBlock").hide();
+  $(".block__User_Message").hide();
+  $(".unblock__User_Message").show();
+  $(".message").hide();
+  $(".wrap-icon").hide();
+  $(".blockedChat").show().css({"margin-left":"20px","margin-top":"15px","color":"#ddd"});
+}
+});
+}
+
+}
+
+function isBlocked(id){
+//check if the chat is Blocked or NOt
+let BlockedId = blockedChat.find(k=> k==id);
+if(BlockedId == undefined){
+  $(".message").show();
+  $(".wrap-icon").show();
+  $(".block__User_Message").show();
+  $(".unblock__User_Message").hide();
+  $(".blockedChat").hide();
+  return false;
+   }
+   else{
+  $(".message").hide();
+  $(".blockedChat").show().css({"margin-left":"20px","margin-top":"15px","color":"#ddd"});;
+  $(".wrap-icon").hide();
+  $(".block__User_Message").hide();
+  $(".unblock__User_Message").show();
+  return true;
+   }
+ }
+var Message = {
+  currentText: "Hi",
+  init: function(){
+    var base = this;
+    base.send();
+  },
+  send: function(){
+    var base = this;
+    document.getElementById('message').addEventListener('keypress', function(evt) {
+    if (evt.which === 13) {
+        evt.preventDefault();
+  $("#message").children('.emojione').each(function () {
+  $(this).replaceWith($(this).prop('title'));
+});
+     //base.createGroup();
+      base.saveText();
+      if(base.currentText != ''){
+        base.createMessage();
+        base.scrollDown();
+      }
+    }
+});
+  },
+  saveText: function(){
+    var base = this;
+    base.currentText = textMessage.textContent;
+    textMessage.textContent = '';
+    $("#smiley_input").hide();
+    $("#stickers_input").hide();
+  },
+  //Format Time
+formatAMPM: function(date) {
+  var hours = date.getHours();
+  var minutes = date.getMinutes();
+  var ampm = hours >= 12 ? 'pm' : 'am';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  minutes = minutes < 10 ? '0'+minutes : minutes;
+  var strTime = hours + ':' + minutes + ' ' + ampm;
+  return strTime;
+},
+  createMessage: function(){
+    var base = this;
+    var time = base.formatAMPM(new Date());
+    var textMessage = emojione.shortnameToImage(base.currentText);
+    if($('.message__list:last-child').hasClass('messages--sent')){
+     $(".messages--sent:last-child").append(`<div class="message__item message__sent">
+        <span class="chat__message message--user">`+textMessage+`</span>
+      </div>`);
+    }
+    else{
+
+      $(".chat").append(`<div class="message__list messages--sent">
+        <div class="message__item message__sent">
+        <span class="chat__message message--user">`+textMessage+`</span>
+      </div></div>`);
+
+    }
+    let DoroMessanger = new DorochatMessanger();//From Messanger.js File
+   let newMsg = DoroMessanger.addMessage(DORO("chat_id").val(),loggedInUser.value,"12:09",textMessage,"client",true);
+   //Stop typing indicator
+     typing = false;
+      //send message to the server
+      socket.emit('message',{
+      message : textMessage,
+      chatId : DORO("chat_id").val(),
+      time : time,
+      profile:userdata.profile,
+      senderID : loggedInUser.value,
+    });
+
+   },
+  createGroup: function(){
+    if($('.message__list:last-child').hasClass('messages--received')){
+      conversation.append(`<div class="message__list messages--sent">
+      <div class="message__item message__sent">
+        <span class="chat__message message--user"></span>
+      </div></div>`);
+    }
+    if($('.image__list:last-child').hasClass('send')){
+     conversation.append(`<div class="message__list messages--sent">
+      <div class="message__item message__sent">
+        <span class="chat__message message--user"></span>
+      </div></div>`);
+    }
+    if($('.image__list_receive:last-child').hasClass('R_single')){
+     conversation.append(`<div class="message__list messages--sent">
+      <div class="message__item message__sent">
+        <span class="chat__message message--user"></span>
+      </div></div>`);
+    }
+
+    if($('.image__list_receive:last-child').hasClass('multiple')){
+     conversation.append(`<div class="message__list messages--sent">
+      <div class="message__item message__sent">
+        <span class="chat__message message--user"></span>
+      </div></div>`);
+    }
+  },
+  scrollDown: function(){
+    var base = this;
+    //conversation.scrollTop(conversation[0].scrollHeight);
+    conversation.stop().animate({
+      scrollTop: conversation[0].scrollHeight
+    }, 500);
+  }
+};
+
+var newMessage = Object.create(Message);
+newMessage.init();
+
+//Show Right Side
+$("#show-contact-information").on("click",function(){
+   $(".chat-head i").hide();
+   $(".information").show();
+   $("#close-contact-information").show()
+   $('.chat').css({"width":"38%"});
+   $('.right').css({"min-width":"43%"});
+   conversation.stop().animate({
+      scrollTop: conversation[0].scrollHeight
+    }, 500);
+});
+$("#close-contact-information").on("click",function(){
+    	$(".chat-head i").show();
+		$("#close-contact-information").hide();
+		$(".information").hide();
+		$('.chat').css({"width":"65%"});
+   $('.right').css({"min-width":"70%"});	
+ });
+
+$("#dropdown").on("click", function(e){
+  e.preventDefault();
+  
+  if($(this).hasClass("open")) {
+    $(this).removeClass("open");
+    $(this).children("ul").toggle();
+  } else {
+    $(this).addClass("open");
+    $(this).children("ul").toggle();
+  }
+});
+$("#show-file-upload").on("click", function(e){
+  e.preventDefault();
+  $(this).css({"z-index":"99999"});
+  $(".floaty-list").toggle();
+});
+
+
+function placeCaretAtEnd(el) {
+  el.focus();
+  if (typeof window.getSelection != "undefined"
+    && typeof document.createRange != "undefined") {
+    var range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+ } else if (typeof document.body.createTextRange != "undefined") {
+  var textRange = document.body.createTextRange();
+  textRange.moveToElementText(el);
+  textRange.collapse(false);
+  textRange.select();
+ }
+ 
+if(typing == false) {
+    typing = true
+    socket.emit('typing',DORO("chat_id").val());
+    timeout = setTimeout(timeoutFunction, 4000);
+  } else {
+    clearTimeout(timeout);
+    timeout = setTimeout(timeoutFunction, 4000);
+  }
+}
+
+//Check Whether a User is typing or Not
+var typing = false;
+var timeout = undefined;
+//Listen to someone typing a Message and Send it to the Server
+textBox.addEventListener('keypress', function(){
+  if(textBox.textContent.length>3){
+  if(typing == false) {
+    typing = true
+    socket.emit('typing',{profile:userdata.profile,chatId:DORO("chat_id").val()});
+    timeout = setTimeout(timeoutFunction, 4000);
+  } else {
+    clearTimeout(timeout);
+    timeout = setTimeout(timeoutFunction, 4000);
+  }
+
+  }
+});
+
+function timeoutFunction(){
+  typing = false;
+  socket.emit('pausedTyping',DORO("chat_id").val());
+  //removeTypingBubble();
+}
+
+//check if a user is typing
+socket.on('typing', function(data){
+    if(data.chatId === DORO("chat_id").val()){//Open chat
+  var typingBubble = document.getElementById('bubble');
+  if(typingBubble == null){
+    $('.chat').append(` <div class="typing--messages" id="TypingIndicator">
+      <div class="message__item message__bubble"> <div class="TypAvat">
+      <img class="sender__image__typing" id="thumbAvtar" src="assets/whatsAppclone/profiles/`+data.profile+`"> </div>
+       <div id="bubble">
+    <div id="circleWrapper">
+      <div class="circle" id="circle1"></div>
+      <div class="circle" id="circle2"></div>
+      <div class="circle" id="circle3"></div>
+    </div>
+  </div></div>
+       </div></div>`);
+    conversation.stop().animate({
+      scrollTop: conversation[0].scrollHeight
+    }, 200);
+  }
+  }
+  
+});
+
+//Check if a user is connected to the Webserver
+socket.on('connected', function(data){
+console.log(data);
+});
+
+
+socket.on('disconnected', function(data){
+console.log(data);
+});
+
+//When a user Refresh the browser
+
+function checkOnlineUsers(){
+  $.ajax({
+ type: 'POST',
+ data: {id:loggedInUser.value},
+ url: host+'/chatApp/onlineusers.php',         
+ success: function(data) {
+   let fomatedData = JSON.parse(data);
+   fomatedData.forEach(function(data){
+     let user = document.getElementById("user"+data.id);
+     if(user !== null ){
+       user.classList.remove("offline");
+       user.classList.add("online");
+     }
+
+   });
+ }
+});
+}
+
+
+//Update chat seen
+socket.on('seen', function(data){
+  if(!isBlocked(data.id)){
+   let  msgStatus = $("#"+data.id).find('.contacts__avatar--mini');
+  if(msgStatus.hasClass("Msgunseen")){
+  if(data.chatStat == "newChat"){
+  msgStatus.css({"background-image":"url(assets/whatsAppclone/profiles/"+data.profile+")"});
+  msgStatus.addClass("Msgseen");
+  msgStatus.removeClass('Msgunseen');
+  }
+}
+}
+});
+
+//Paused typing
+socket.on('pausedTyping', function(data){
+  $("#bubble").remove();
+  $("#TypingIndicator").remove();
+});
+
+socket.on('unblock', function(data){
+var i = blockedChat.find(P=> P==data.chatId);
+const filteredItems = blockedChat.filter(item => item !== data.chatId)
+blockedChat = filteredItems.splice(i, 1);
+});
+//Get  Message From User
+//Add Message to USer Message Array
+socket.on('message', function(data){
+	let cId = document.getElementById(data.chatId);
+	if(cId!== null){
+		if(!isBlocked()){
+          $("#bubble").remove();
+     $("#TypingIndicator").remove();
+  if(loggedInUser.value!== data.senderID){
+    if(data.chatId === DORO("chat_id").val()){//Open chat
+    if($('.chat').find('.message__list:last-child').hasClass('messages--received')){
+     $('.messages--received:last-child').append(`<div class="message__item message__receiver">
+      <img class="sender__image" src="assets/whatsAppclone/profiles/`+data.profile+`">
+        <span class="chat__message message--receiver">`+emojione.shortnameToImage(data.message)+`</span>
+      </div>`);
+    }
+    else{
+ $('.chat').append(`<div class="message__list messages--received">
+  <img class="sender__image" src="assets/whatsAppclone/profiles/`+data.profile+`">
+      <div class="message__item message__receiver">
+        <span class="chat__message message--receiver">`+emojione.shortnameToImage(data.message)+`</span>
+      </div>
+      </div>`);
+    }
+
+    conversation.stop().animate({
+      scrollTop: conversation[0].scrollHeight
+    }, 2500);
+    }
+    //check if is muted
+   isMuted(data.chatId);
+    //Move this chat on Top
+    let activeC = document.getElementById(data.chatId);
+    document.querySelector(".contact-list").prepend(activeC);
+    document.getElementById(data.chatId).querySelector('.contacts__message').innerHTML = emojione.shortnameToImage(data.message);
+    $("#"+data.chatId).find('.contacts__message').css({"color":"black","font-weight":"700"});
+    $("#"+data.chatId).find('.contact__uname').css({"color":"black","font-weight":"700"});
+    let  msgStatus = $("#"+data.chatId).find('.contacts__avatar--mini');
+    //change time color
+    $("#"+data.chatId).find('.contacts__time').css({"color":"#09d261"});
+    $("#"+data.chatId).addClass('newChat');
+    if(msgStatus.hasClass('Msgseen')){
+      msgStatus.removeClass('Msgseen');
+    }
+    //change  background  Image
+    msgStatus.css({"background-image":"none"});
+    if(msgStatus.hasClass('Msgunseen')){
+      //msgStatus.removeClass('Msgunseen');
+      msgStatus.css({"background-image":"none"});
+    }
+    blinkTitle();
+    NewMessageHandler(data.chatId);
+    notificationHandler();
+  }
+		}
+
+	}
+});
+
+//Logout
+function logout(id){
+socket.emit('loggedOut',{id : id});
+window.location = 'logout';
+}
+
+function blinkTitle(){
+  //Blink browser title for new Message
+  pageTitleNotification.on("New Message", 1500);
+  var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/x-icon';
+    link.rel = 'shortcut icon';
+    link.href = host+'/assets/landing/icon/NewMsgChatLogo.png';
+    document.getElementsByTagName('head')[0].appendChild(link);
+}
+
+//Update Message counter
+function NewMessageHandler(id){
+   //Update Message counter
+let NewMsgfinder = newChatMesage.find(k=> k==id);
+if(NewMsgfinder == undefined){
+  newChatMesage.push(id);
+}
+}
+
+function notificationHandler(){
+if(newChatMesage.length>0){
+    //handle Notifications
+$(".notification-container").show();
+$("#NoNewMsg").hide();
+document.querySelector(".notification-counter").innerHTML = newChatMesage.length;
+}
+else{
+$(".notification-container").hide();
+$("#NoNewMsg").show();
+$(".notification-counter").hide();
+
+}
+}
+
+function updateUnreadnotification(id){
+  //Update notification
+let i = newChatMesage.find(P=> P==id);
+const filteredItems = newChatMesage.filter(item => item !== id);
+newChatMesage = filteredItems.splice(i, 1);
+notificationHandler();
+      //Update Browser title
+   pageTitleNotification.off();
+  var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/x-icon';
+    link.rel = 'shortcut icon';
+    link.href = host+'/assets/landing/icon/ChatLogo.png';
+    if(document.title == "null"){
+    document.title = "Dorochat v3.0 ::Super Fast: WhatsApp Web clone";
+    }    
+   document.getElementsByTagName('head')[0].appendChild(link);
+}
+
+ /*****************************IMAGE UPLOAD*******/
+  //configuration
+var max_file_size     = 2048576; //allowed file size. (1 MB = 1048576)
+var allowed_file_types    = ['image/png', 'image/gif', 'image/jpeg', 'image/pjpeg']; //allowed file types
+var result_output     = '#output'; //ID of an element for response output
+var my_form_id      = '#upload_form'; //ID of an element for response output
+var total_files_allowed   = 4; //Number files allowed to upload
+
+//on form submit
+$(my_form_id).on( "change", function(event) { 
+  event.preventDefault();
+  var proceed = true; //set proceed flag
+  var error = []; //errors
+  var total_files_size = 0;
+  
+  if(!window.File && window.FileReader && window.FileList && window.Blob){
+    //if browser doesn't supports File API
+  $(".overlay").show();
+   $(".action__btn").removeClass("btn_delete");
+  $(".action__btn").addClass("btn_block").text("Got it");
+  $(".Doro__Messanger").css({"transition":"all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"}).show();
+  $(".doro_con").html(`Your browser does not support new File API! Please upgrade.`);
+     
+  }else{
+    var total_selected_files = this.elements['__files[]'].files.length; //number of files
+    
+    //limit number of files allowed
+    if(total_selected_files > total_files_allowed){
+  $(".overlay").show();
+  $(".action__btn").removeClass("btn_delete");
+  $(".action__btn").addClass("btn_block").text("Got it");
+  $(".Doro__Messanger").css({"transition":"all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"}).show();
+  $(".doro_con").html(`You have selected  file that is greater than 2MB, please try smaller file!.`);
+      proceed = false; //set proceed flag to false
+    }
+     //iterate files in file input field
+    $(this.elements['__files[]'].files).each(function(i, ifile){
+      if(ifile.value !== ""){ //continue only if file(s) are selected
+        if(allowed_file_types.indexOf(ifile.type) === -1){ //check unsupported file
+          $(".overlay").show();
+  $(".action__btn").removeClass("btn_delete");
+  $(".action__btn").addClass("btn_block").text("Got it");
+  $(".Doro__Messanger").css({"transition":"all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"}).show();
+  $(".doro_con").html("<b>"+ ifile.name + "</b> is unsupported file type!");
+    proceed = false; //set proceed flag to false
+        }
+
+        total_files_size = total_files_size + ifile.size; //add file size to total size
+      }
+    });
+    
+    //if total file size is greater than max file size
+    if(total_files_size > max_file_size){ 
+    $(".overlay").show();
+  $(".action__btn").removeClass("btn_delete");
+  $(".action__btn").addClass("btn_block").text("Got it");
+  $(".Doro__Messanger").css({"transition":"all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)"}).show();
+  $(".doro_con").html("You have selected  file that is greater than 2MB, please try smaller file!");
+      proceed = false; //set proceed flag to false
+    }
+    
+    var submit_btn  = $(this).find("input[type=submit]"); //form submit button  
+    
+    //if everything looks good, proceed with jQuery Ajax
+    if(proceed){
+      submit_btn.val("Please Wait...").prop( "disabled", true); //disable submit button
+      var form_data = new FormData(this); //Creates new FormData object
+      ActiveChatForBothUploadAndTex.chat_id = DORO("chat_id").val();
+      //jQuery Ajax to Post form data
+      $.ajax({
+        url : host+"/chat/image__upload/process.php",
+        type: "POST",
+        data : form_data,
+        contentType: false,
+        cache: false,
+        processData:false,
+        mimeType:"multipart/form-data",
+        beforeSend : function(){
+           $('.chat').append(` <div class="messages messages--sent-loader" id="`+DORO("chat_id").val()+`">
+      <div class="chat-message chat-img Waiting"><center><div align="center"><svg class="spinner-container-img" viewBox="0 0 44 44"><circle class="path" cx="22" cy="22" r="20" fill="none" stroke-width="2"></circle></svg></div></center></div>
+    </div>`);
+            conversation.stop().animate({
+      scrollTop: conversation[0].scrollHeight
+    }, 800);
+
+        }
+      }).done(function(res){ //
+        $(my_form_id)[0].reset(); //reset 
+        let jsObj = JSON.parse("["+res.substr(1)+"]");
+  if(ActiveChatForBothUploadAndTex.chat_id== DORO("chat_id").val()){
+    let imgOBJ = {chatId:ActiveChatForBothUploadAndTex.chat_id, images:jsObj,senderID:loggedInUser.value,time:newMessage.formatAMPM(new Date()),profile:"https://cdn.dribbble.com/users/199982/screenshots/4044699/furkan-avatar-dribbble.png"};
+        socket.emit("image", imgOBJ);//'send them to to his friend'
+
+//UPDATE CONTACTS
+
+//If a user didn't Mute sound
+    //check if is muted
+   isMuted(DORO("chat_id").val());
+     //Move this chat on Top
+  let activeC = document.getElementById(DORO("chat_id").val());
+    document.querySelector(".contact-list").prepend(activeC);
+    document.getElementById(DORO("chat_id").val()).querySelector('.contacts__message').innerHTML =  '<img src="assets/whatsAppclone/img/photo-camera.svg" class="msgImg"> Image';
+        $("#"+DORO("chat_id").val()).find('.contacts__message').css({"color":"#999","font-weight":"700"});
+    $("#"+DORO("chat_id").val()).find('.contact__uname').css({"font-weight":"400","font-family":'"DejaVu Sans", "Bitstream Vera Sans", "Segoe UI", "Lucida Grande", Verdana, Tahoma, Arial, sans-serif;'});
+    let  msgStatus = $("#"+DORO("chat_id").val()).find('.contacts__avatar--mini');
+    //change time color
+    $("#"+DORO("chat_id").val()).find('.contacts__time').css({"color":"#999"});
+
+
+
+
+    jsObj.forEach((el)=>{
+          let newMsg = {
+      id:ActiveChatForBothUploadAndTex.chat_id,
+      user_id:loggedInUser,
+      time:newMessage.formatAMPM(new Date()),
+      text:el.objurl,
+      mtype:"img",
+      count:el.count,
+      ownid:el.ownid,
+      seen:false,
+      sender:true,
+      from:"client"
+    }
+    currentChatMessages.push(newMsg);
+
+      ListImage(newMsg);
+    $(".Waiting").hide();
+     senderPreloader();
+    //check if Images are loaded successfully
+  const ObJImage = new Image();
+  ObJImage.src = el.objurl;
+
+  ObJImage.onload = function(){
+  $(".messages--sent-preloader").remove();
+    if(el.count>1){
+    if($('.chat').find('.image__list:last-child').hasClass('multiple')){
+     $('.multiple:last-child').append(`<div class="message__item__image message__sent__img">
+        <span class="img-message message--user--img" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div>`);
+    }
+    else{
+      $('.chat').append(` <div class="image__list send multiple">
+      <div class="message__item__image message__sent__img">
+        <span class="img-message message--user--img" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div></div>`);
+    }
+ }
+ else{
+   if($('.chat').find('.image__list:last-child').hasClass('single')){
+     $('.single:last-child').append(`<div class="message__item__image message__sent__img">
+        <span class="img-message-single message--user--img--single" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div>`);
+    }
+    else{
+      $('.chat').append(` <div class="image__list send single">
+      <div class="message__item__image message__sent__img">
+        <span class="img-message-single message--user--img--single" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div></div>`);
+    }
+ }
+    
+  }
+
+});
+
+  
+    }
+        
+    $(".chat").animate({scrollTop: $(".chat").prop("scrollHeight")},500);
+
+
+      });
+    }
+  }
+  
+  $(result_output).html(""); //reset output 
+  $(error).each(function(i){ //output any error to output element
+    $(result_output).append('<div class="error">'+error[i]+"</div>");
+  });
+    
+});
+
+
+/****Receiving of images from server***/
+socket.on("image", function(data){
+ if(!isBlocked(data.chatId)){
+    if(!isdeletedChat(data.chatId)){//chat isn't deleted
+    if(loggedInUser.value!== data.senderID){
+      
+      data.images.forEach((el)=>{//Just if is not the sender
+          let newMsg = {
+      id:data.chatId,
+      user_id:data.senderID,
+      time:newMessage.formatAMPM(new Date()),
+      text:el.objurl,
+      mtype:"img",
+      count:el.count,
+      ownid:el.ownid,
+      seen:false,
+      sender:false,
+      from:"server"
+    }
+    currentChatMessages.push(newMsg);
+    ListImage(newMsg);
+  });
+
+    if(data.chatId === DORO("chat_id").val()){//Open chat
+      data.images.forEach((el)=>{
+ receiverPreloader();
+  //check if Images are loaded successfully
+  const ObJImage = new Image();
+  ObJImage.src = el.objurl;
+
+  ObJImage.onload = function(){
+ $(".messages--receive-preloader").remove();
+    if(el.count>1){
+    if($('.chat').find('.image__list_receive:last-child').hasClass('multiple')){
+     $('.multiple:last-child').append(`<img class="sender__image" src="`+data.profile+`"><div class="message__item__image message__receive__img">
+        <span class="img-message message--user--img" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div>`);
+    }
+    else{
+      $('.chat').append(` <div class="image__list_receive multiple">
+      <div class="message__item__image message__receive__img">
+        <span class="img-message message--user--img" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div></div>`);
+    }
+ }
+ else{
+   if($('.chat').find('.image__list_receive:last-child').hasClass('R_single')){
+     $('.R_single:last-child').append(`<img class="sender__image_img" src="`+data.profile+`"><div class="message__item__image message__receive__img">
+        <span class="img-message-single message--user--img--single--receive" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div>`);
+    }
+    else{
+      $('.chat').append(` <div class="image__list_receive R_single">
+        <img class="sender__image" src="`+data.profile+`">
+      <div class="message__item__image message__receive__img">
+        <span class="img-message-single message--user--img--single--receive" style="background-image: url(`+el.objurl+`)" onclick="openModal(); currentSlide(`+el.ownid+`)">
+        </span>
+      </div></div>`);
+    }
+ }
+    
+ } 
+
+});
+
+    conversation.stop().animate({
+      scrollTop: conversation[0].scrollHeight
+    }, 1500);
+    }
+    //If a user didn't Mute sound
+    //check if is muted
+   isMuted(data.chatId);
+    //Move this chat on Top
+    let activeC = document.getElementById(data.chatId);
+    document.querySelector(".contact-list").prepend(activeC);
+    document.getElementById(data.chatId).querySelector('.contacts__message').innerHTML =  "Sent an image";
+        $("#"+data.chatId).find('.contacts__message').css({"color":"black","font-weight":"700"});
+    $("#"+data.chatId).find('.contact__uname').css({"color":"black","font-weight":"700"});
+    let  msgStatus = $("#"+data.chatId).find('.contacts__avatar--mini');
+    //change time color
+    $("#"+data.chatId).find('.contacts__time').css({"color":"#0084FF"});
+    $("#"+data.chatId).addClass('newChat');
+    if(msgStatus.hasClass('Msgseen')){
+      msgStatus.removeClass('Msgseen');
+    }
+    //change  background  Image
+    msgStatus.css({"background-image":"none"});
+
+if(msgStatus.hasClass('Msgunseen')){
+      msgStatus.removeClass('Msgunseen');
+      msgStatus.css({"background-image":"none"});
+    }
+    //update notification
+NewMessageHandler(data.chatId)
+notificationHandler();
+blinkTitle();
+  }
+
+  
+}
+
+}
+});
+
+function addImageLoader(){
+ let item = `<div class="messages messages--sent-preloader">
+      <div class="chat-message chat-img Preloading">
+      <div class="preloader" style="width: 300px; height: 400px">
+  <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 90 66'><defs><symbol id='a' viewBox='0 0 90 66' opacity='0.2'><path d='M85 5v56H5V5h80m5-5H0v66h90V0z'/><circle cx='18' cy='20' r='6'/><path d='M56 14L37 39l-8-6-17 23h67z'/></symbol></defs><use xlink:href='#a' width='20%' x='40%'/></svg>
+   <div class='text-input__loading'>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+</div>
+</div></div></div>
+    </div>`;
+    return item;
+}
+
+function senderPreloader(){
+ $(".chat").append(`
+      <div class="messages messages--sent-preloader" id="`+ActiveChatForBothUploadAndTex.chat_id+`">
+      <div class="chat-message chat-img Preloading">
+      <div class="preloader" style="width: 300px; height: 400px">
+  <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 90 66'><defs><symbol id='a' viewBox='0 0 90 66' opacity='0.2'><path d='M85 5v56H5V5h80m5-5H0v66h90V0z'/><circle cx='18' cy='20' r='6'/><path d='M56 14L37 39l-8-6-17 23h67z'/></symbol></defs><use xlink:href='#a' width='20%' x='40%'/></svg>
+   <div class='text-input__loading'>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+</div>
+</div></div></div>
+    </div>`);
+  
+}
+
+function receiverPreloader(){
+  $(".chat").append(`
+      <div class="messages messages--receive-preloader">
+      <div class="chat-message chat-img Preloading">
+      <div class="preloader" style="width: 300px; height: 400px">
+  <svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' viewBox='0 0 90 66'><defs><symbol id='a' viewBox='0 0 90 66' opacity='0.2'><path d='M85 5v56H5V5h80m5-5H0v66h90V0z'/><circle cx='18' cy='20' r='6'/><path d='M56 14L37 39l-8-6-17 23h67z'/></symbol></defs><use xlink:href='#a' width='20%' x='40%'/></svg>
+   <div class='text-input__loading'>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+  <div class='text-input__loading--line'></div>
+</div>
+</div></div></div>
+    </div>`);
+  
+}
+
+//**DOROCHAT MESSANGER LIGHT BOX***//
+function LightBoxImg(obj){
+ $('.user-photos__slot').append(`<div class="Shared__image_holder">
+  <img src="`+obj.crReply+`" style="width:100%" onclick="openModal(); currentSlide(`+obj.img_id+`)" class="hover-shadow cursor">
+</div>`);
+   ImageArray.push({id:obj.img_id,img:obj.crReply,sentOn:obj.crTime,count:1});
+}
+
+function ListImage(obj){
+   $('.user-photos__slot').append(`<div class="Shared__image_holder">
+  <img src="`+obj.text+`" style="width:100%" onclick="openModal(); currentSlide(`+obj.ownid+`)" class="hover-shadow cursor">
+</div>`);
+   ImageArray.push({id:obj.ownid,img:obj.text,sentOn:obj.time,count:obj.count});
+}
+let ZoomIndex = document.getElementById('ZoomIndex');
+let ImageArray = [];
+
+function openModal() {
+  document.getElementById('myModal').style.display = "block";
+  document.querySelector('.img_lightBox').style.display = "block";
+  document.querySelector('.Doro__Messanger_lightBox').style.display = "block";
+  document.querySelector('.Doro__Messanger_lightBox').style.width = "35%";
+   $('.Doro__Messanger_lightBox').css({"margin-top":"","height":""});
+  document.querySelector('.img_lightBox').style.display = "block";
+
+  $(".bottom").html("");
+  ImageArray.forEach((e)=>{
+  $(".bottom").append(`<div class="column" id="Img`+e.id+`">
+      <img class="chat__asset cursor" src="`+e.img+`" onclick="currentSlide(`+e.id+`)" alt="Sent on `+e.sentOn+`">
+    </div>`);
+ $(".img__item").append(`<div class="mySlides" id="Slider`+e.id+`" style="display:none">
+      <div class="numbertext">`+e.count+`/ `+ImageArray.length+`</div>
+      <img id="`+e.id+`" src="`+e.img+`">
+    </div>`);
+ $('.Img__navbtn').html(`<a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+    <a class="next" onclick="plusSlides(-1)">&#10095;</a>`);
+});
+}
+
+function closeModal() {
+  document.getElementById('myModal').style.display = "none";
+    document.querySelector('.Doro__Messanger_lightBox').style.display = "none";
+  document.querySelector('.img_lightBox').style.display = "none";
+}
+
+$(document).keydown(function(e) {
+    switch(e.which) {
+       case 27: // Escape Key
+       closeModal();
+        break;
+        case 37: // Arrow Key left
+        plusSlides(1)
+        break;
+        case 39: // Arrow Key right
+        plusSlides(-1)
+        break;
+
+        default: return; // exit this handler for other keys
+    }
+    e.preventDefault(); // prevent the default action (scroll / move caret)
+});
+
+
+/*** Zoom in ***/
+function zoomin() {
+  var myImg = document.getElementById(ZoomIndex.value);
+  var currWidth = myImg.clientWidth;
+  if (currWidth > 400) {
+    document.querySelector('.bottom').style.display = "block";
+  }
+
+  if (currWidth > 750) {
+    document.querySelector('.Doro__Messanger_lightBox').style.top = "45%";
+    return false;
+  }
+  else {
+    myImg.style.width = (currWidth + 100) + "px";
+    document.querySelector('.Doro__Messanger_lightBox').style.width = (currWidth + 120) + "px";
+  }
+}
+
+function zoomout() {
+
+  var myImg = document.getElementById(ZoomIndex.value);
+  var currWidth = myImg.clientWidth;
+if (currWidth < 400) {
+    document.querySelector('.bottom').style.display = "none";
+  }
+
+  if (currWidth < 300) {
+    document.querySelector('.Doro__Messanger_lightBox').style.width = (currWidth + 50) + "px";
+    return false;
+  }
+  else {
+    myImg.style.width = (currWidth - 100) + "px";
+    document.querySelector('.Doro__Messanger_lightBox').style.width = (currWidth - 30) + "px";
+  }
+}
+function fullScreen(){
+  var myImg = document.getElementById(ZoomIndex.value);
+    document.querySelector('.Doro__Messanger_lightBox').style.width = "70%";
+    document.querySelector('.Doro__Messanger_lightBox').style.height = "auto";
+    $('.Doro__Messanger_lightBox').css({"margin-top":"-70px"});
+    $('.bottom').css({"display":"block"});
+     myImg.style.width = "100%";
+  myImg.style.height = "70%";
+
+}
+
+var slideIndex = 1;
+nextPrev(slideIndex)
+showSlides(slideIndex);
+
+function plusSlides(n) {
+  nextPrev(slideIndex += n);
+}
+
+function currentSlide(n) {
+  showSlides(n);
+  //Lets put clicked image after Others
+  document.querySelector(".bottom").append(DORO('Img'+n).sel());
+}
+
+function showSlides(n) {
+  ZoomIndex.value = n;
+  var i;
+  var slides = document.getElementsByClassName("mySlides");
+  var dots = document.getElementsByClassName("chat__asset");
+  var captionText = document.getElementById("caption");
+  if (n > slides.length) {slideIndex = 1}
+  if (n < 1) {
+    slideIndex = slides.length;
+  }
+  for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+  }
+  for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+  }
+     //slides[1].style.display = "none";
+     //l//et imgSlider = document.getElementById("Slider"+n).style.display = "block";
+   $("#Slider"+n).show();
+   $("Img"+n).addClass("active");
+  if(dots[slideIndex-1]!== undefined){
+ captionText.innerHTML = dots[slideIndex-1].alt;
+  }
+}
+
+function nextPrev(n) {
+ var i;
+  var slides = document.getElementsByClassName("mySlides");
+  var dots = document.getElementsByClassName("chat__asset");
+  var captionText = document.getElementById("caption");
+  if (n > slideIndex.length) {slideIndex = 1}
+  if (n < 1) {
+    slideIndex = slides.length;
+  }
+  for (i = 0; i < slides.length; i++) {
+      slides[i].style.display = "none";
+  }
+  for (i = 0; i < dots.length; i++) {
+      dots[i].className = dots[i].className.replace(" active", "");
+  }
+  $(".numbertext").html(slideIndex+"/"+slides.length);
+  if(slides[slideIndex-1]!== undefined){
+ slides[slideIndex-1].style.display = "block";
+  }
+  if(dots[slideIndex-1]!== undefined){
+ dots[slideIndex-1].className += " active";
+ captionText.innerHTML = dots[slideIndex-1].alt;
+  }
+}
+//search chat
+var ContactListWrapper = document.querySelector('.contact-list');
+const searchbar = document.querySelector('.input-search');
+searchbar.addEventListener('keyup', function(e){
+const SearQuery = e.target.value.toLowerCase();
+  const Userlist = ContactListWrapper.getElementsByClassName('contacts__slot');
+
+  Array.from(Userlist).forEach(function(uname){
+      const fname = uname.textContent; //This will Filter Last Message match/ name match
+      const contactname = uname.getElementsByClassName('contact__uname');
+
+      Array.from(contactname).forEach(function(fullname){
+          var fullname = fullname.textContent; //Contact Fullname
+
+          if(fname.toLowerCase().indexOf(SearQuery)!== -1){//if You need to filter contact, replace fname.toLowerCase() To fullname.toLowerCase()
+            //Other wise this will Search and Return Matches, either on message Text or Fullname
+            uname.style.display = 'flex';
+          }
+          else{
+            uname.style.display = 'none';
+          }
+
+        });
+
+  });
+
+
+});
+
+

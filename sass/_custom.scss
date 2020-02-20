@@ -1,5 +1,14 @@
+/// @author Alvaro Zambrana Fernandez
+/// @link https://github.com/AlvaroZ-F/Cuatro
+/// @name Cuatro App Template for Custom Bootstrap
+
+/// ## navbar customized
 .navbar {
     margin-bottom: 0;
+
+    .container{
+        background-color: transparent;
+    }
 
     a {
         color: set-text-color($main-color) !important;
@@ -10,6 +19,7 @@
     }
 }
 
+/// ## Showcase item class
 .showcase {
     background: url(../img/showcase.jpeg) no-repeat 0 -100px;
     background-size: cover;
@@ -28,24 +38,33 @@
     }
 }
 
-
+/// ## section a
 .section-a {
     padding: 30px 0;
     text-align: center;
     background: $main-color;
     color: set-text-color($main-color);
 
+    .container {
+        background-color: transparent;
+    }
+
     .fa {
         font-size: $icon-size;
     }
 }
 
+/// ## section b
 .section-b {
     background: #e6ebf1;
     padding: 30px 0;
-    
+
+    .container {
+        background-color: transparent;
+    }
+
     img {
-        width:100%;
+        width: 100%;
     }
 }
 
@@ -53,17 +72,23 @@
     color: set-text-color($main-color);
 }
 
+/// ## section c
 .section-c {
     padding: 60px 0;
     text-align: center;
     background: $main-color;
     color: set-text-color($main-color);
 
+    .container {
+        background-color: transparent;
+    }
+
     .btn-primary {
         background: darken($main-color, 10%);
     }
 }
 
+/// ## Title bar
 .title-bar {
     background: url(../img/showcase.jpeg) no-repeat 0 -300px;
     background-size: cover;
@@ -71,16 +96,59 @@
     border-bottom: 4px solid $main-color;
 }
 
+/// ## main section
 .main {
     margin-top: 30px;
 }
 
-.layout-c {
-    
+/// ## Custom Section Container GRID.
+.container {
+    max-width: $grid__bp-md * 1px;
+    margin: 0 auto;
+    background-color: $another-color;
+    padding: 10px;
+    box-sizing: border-box;
+
+    &--fluid {
+        margin: 0;
+        max-width: 100%;
+    }
+
+    &__row {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    @at-root {
+        [class*='container__col-'] {
+            width: 150px;
+            height: 30px;
+            background-color: $main-color;
+            outline: 1px solid $another-color;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            font-weight: bold;
+            color: set-text-color($main-color);
+        }
+    }
+
+    @for $i from 1 through $grid__cols {
+        &__col-#{$i} {
+            flex-basis: (100 / ($grid__cols / $i)) * 1%;
+        }
+    }
 }
 
+/// ## Custom Footer
 footer {
     padding: 30px 0;
     background: darken($main-color, 10%);
     color: set-text-color($main-color);
+
+    .container {
+        background-color: transparent;
+    }
 }

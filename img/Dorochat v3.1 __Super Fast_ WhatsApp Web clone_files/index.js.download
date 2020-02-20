@@ -1,0 +1,59 @@
+emojione.ascii = true
+
+function emojify(elArg){
+//   
+ function placeCaretAtEnd(el, moveTo) {
+    el.focus()
+    if (typeof window.getSelection != "undefined"
+            && typeof document.createRange != "undefined") {
+        var range = document.createRange()
+        // range.selectNodeContents(el)
+        range.setStartBefore(moveTo) //this does the trick
+        range.collapse(false)
+        var sel = window.getSelection()
+        sel.removeAllRanges()
+        sel.addRange(range)
+    }
+}
+//   
+	
+$.each(elArg.childNodes, (i,e)=>{
+var node = e
+var nodeIndex = i
+
+var ascii = new RegExp(emojione.regAscii)
+var short = new RegExp(emojione.regShortNames)
+
+var combination = new RegExp(ascii.source+'|'+short.source , 'g') 
+
+var matches = node.textContent.match(combination)
+if(matches){
+	  var e =  matches[0]
+			var start = node.textContent.indexOf(e)
+			var end = node.textContent.indexOf(e)+e.length
+			
+			var stringToConvert = node.textContent.slice(start, end)
+   
+      var temp_container = document.createElement('div')
+      temp_container.innerHTML = emojione.toImage(stringToConvert)
+     
+       var emo = $(temp_container).find('.emojione').get(0) || temp_container.firstChild
+     
+			
+		  var beforeText = document.createTextNode(node.textContent.slice(0, start))
+		  var afterText = document.createTextNode(node.textContent.slice(end))
+		
+    node.parentNode.insertBefore(beforeText, node)
+    node.parentNode.insertBefore(afterText, node.nextSibling)
+    node.parentNode.replaceChild(emo, node)
+    placeCaretAtEnd(elArg, emo.nextSibling)
+    emojify(elArg) // check for other
+	}
+})
+}
+
+$('.input-message').on('input change', e=>{
+  emojify($('.input-message').get(0))
+})
+
+

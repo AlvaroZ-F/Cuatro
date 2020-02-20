@@ -3,8 +3,14 @@ $bootstrap-sass-asset-helper: false !default;
 // Variables
 // --------------------------------------------------
 
-// Custom
+/// Custom Main Color
+/// @type Color
 $main-color: #6bc79c;
+/// Custom Secondary Color
+/// @type Color
+$another-color: #dddddd;
+/// Custom Icon Size
+/// @type Size
 $icon-size: 60px;
 
 //== Colors
@@ -325,6 +331,14 @@ $screen-sm-max: ($screen-md-min - 1) !default;
 $screen-md-max: ($screen-lg-min - 1) !default;
 
 
+
+/// Custom New Grid Variable Size
+/// @type Size
+$grid__bp-md: 768;
+///
+$grid__cols: 12;
+
+
 //== Grid system
 //
 //## Define your custom responsive grid.
@@ -373,6 +387,8 @@ $navbar-padding-vertical: (($navbar-height - $line-height-computed) / 2) !defaul
 $navbar-collapse-max-height: 340px !default;
 
 $navbar-default-color: #777 !default;
+/// Navbar Customized Color
+/// @type Color
 $navbar-default-bg: $main-color !default;
 $navbar-default-border: darken($navbar-default-bg, 6.5%) !default;
 

@@ -1,3 +1,7 @@
+/// @requires set-text-color
+/// @param {color} $color - Element's background color
+/// @returns {color} Switch text color from black to white depending of the background color.
+
 @function set-text-color($color) {
     @if(lightness($color) > 50) {
         @return #000000;
