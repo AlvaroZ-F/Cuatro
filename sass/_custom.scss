@@ -120,6 +120,7 @@
         width: 100%;
     }
 
+    // @at-root rule causes everything within it to be emitted at the root of the document instead of using the normal nesting.
     @at-root {
         [class*='container__col-'] {
             width: 150px;
