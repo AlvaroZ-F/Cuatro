@@ -1,8 +1,8 @@
+/// @name Cuatro App SASS
 /// @author Alvaro Zambrana Fernandez
 /// @link https://github.com/AlvaroZ-F/Cuatro
-/// @name Cuatro App Template for Custom Bootstrap
 
-/// ## navbar customized
+/// @name navbar customized
 .navbar {
     margin-bottom: 0;
 
@@ -19,7 +19,7 @@
     }
 }
 
-/// ## Showcase item class
+/// @name Showcase item class
 .showcase {
     background: url(../img/showcase.jpeg) no-repeat 0 -100px;
     background-size: cover;
@@ -38,7 +38,7 @@
     }
 }
 
-/// ## section a
+/// @name section a
 .section-a {
     padding: 30px 0;
     text-align: center;
@@ -54,7 +54,7 @@
     }
 }
 
-/// ## section b
+/// @name section b
 .section-b {
     background: #e6ebf1;
     padding: 30px 0;
@@ -72,7 +72,7 @@
     color: set-text-color($main-color);
 }
 
-/// ## section c
+/// @name section c
 .section-c {
     padding: 60px 0;
     text-align: center;
@@ -88,7 +88,7 @@
     }
 }
 
-/// ## Title bar
+/// @name Title bar
 .title-bar {
     background: url(../img/showcase.jpeg) no-repeat 0 -300px;
     background-size: cover;
@@ -96,12 +96,12 @@
     border-bottom: 4px solid $main-color;
 }
 
-/// ## main section
+/// @name main section
 .main {
     margin-top: 30px;
 }
 
-/// ## Custom Section Container GRID.
+/// @name Custom Section Container GRID.
 .container {
     max-width: $grid__bp-md * 1px;
     margin: 0 auto;
@@ -142,7 +142,7 @@
     }
 }
 
-/// ## Custom Footer
+/// @name Custom Footer
 footer {
     padding: 30px 0;
     background: darken($main-color, 10%);

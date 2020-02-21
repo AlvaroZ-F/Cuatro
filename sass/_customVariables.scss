@@ -332,10 +332,11 @@ $screen-md-max: ($screen-lg-min - 1) !default;
 
 
 
-/// Custom New Grid Variable Size
+/// Custom New Grid Size
 /// @type Size
 $grid__bp-md: 768;
-///
+/// Custom New Grid Number of Columns
+/// @type Number
 $grid__cols: 12;
 
 
